@@ -1,9 +1,23 @@
 import { ReagentCategory, ReagentState } from './reagents';
 
+export type InorganicSubcategory = 
+  | 'Кислоты'
+  | 'Основания'
+  | 'Оксиды'
+  | 'Простые вещества'
+  | 'Нитраты'
+  | 'Карбонаты'
+  | 'Сульфаты'
+  | 'Хлориды'
+  | 'Фосфаты'
+  | 'Другие соли'
+  | 'Разное';
+
 export interface MandatoryReagent {
   id: string;
   name: string;
   category: ReagentCategory;
+  subcategory?: InorganicSubcategory;
   defaultState: ReagentState;
   defaultUnit: 'g' | 'ml';
 }
@@ -65,14 +79,14 @@ export const MANDATORY_REAGENTS: MandatoryReagent[] = rawList.map((name, index) 
       lowerName.includes('пальмитиновая') || lowerName.includes('стеариновая') || lowerName.includes('уксусная') ||
       lowerName.includes('щавелевая') || lowerName.includes('аминоуксусная') || lowerName.includes('муравьиная') ||
       lowerName.includes('фенолфталеин') || lowerName.includes('метиловый оранжевый') || lowerName.includes('лакмоид') ||
-      lowerName.includes('карбамид') || lowerName.includes('метиламин')) {
+      lowerName.includes('карбамид') || lowerName.includes('метиламин') || lowerName.includes('уголь')) {
     category = 'organic';
   }
 
   // Liquid heuristics
   if (lowerName.includes('спирт') || lowerName.includes('эфир') || lowerName.includes('глицерин') || 
       lowerName.includes('формалин') || lowerName.includes('этиленгликоль') || lowerName.includes('нефть') ||
-      lowerName.includes('кислота') && !lowerName.includes('аминоуксусная') && !lowerName.includes('пальмитиновая') && !lowerName.includes('стеариновая') && !lowerName.includes('щавелевая') ||
+      (lowerName.includes('кислота') && !lowerName.includes('аминоуксусная') && !lowerName.includes('пальмитиновая') && !lowerName.includes('стеариновая') && !lowerName.includes('щавелевая')) ||
       lowerName.includes('%-й')) {
     defaultState = 'liquid';
     defaultUnit = 'ml';
@@ -84,10 +98,27 @@ export const MANDATORY_REAGENTS: MandatoryReagent[] = rawList.map((name, index) 
     defaultUnit = 'ml';
   }
 
+  let subcategory: InorganicSubcategory | undefined;
+
+  if (category === 'inorganic') {
+    if (lowerName.includes('кислота')) subcategory = 'Кислоты';
+    else if (lowerName.includes('гидроксид') || lowerName.includes('аммиак')) subcategory = 'Основания';
+    else if (lowerName.includes('оксид')) subcategory = 'Оксиды';
+    else if (lowerName.includes('нитрат') || lowerName.includes('селитра')) subcategory = 'Нитраты';
+    else if (lowerName.includes('карбонат') || lowerName.includes('поташ')) subcategory = 'Карбонаты';
+    else if (lowerName.includes('сульфат') || lowerName.includes('гидросульфат')) subcategory = 'Сульфаты';
+    else if (lowerName.includes('хлорид')) subcategory = 'Хлориды';
+    else if (lowerName.includes('фосфат') || lowerName.includes('аммофос')) subcategory = 'Фосфаты';
+    else if (lowerName.includes('бромид') || lowerName.includes('фторид') || lowerName.includes('йодид') || lowerName.includes('иодид') || lowerName.includes('сульфид') || lowerName.includes('сульфит') || lowerName.includes('силикат') || lowerName.includes('гексацианид') || lowerName.includes('гексационид') || lowerName.includes('роданид') || lowerName.includes('дихромат') || lowerName.includes('соль') || lowerName.includes('карбид')) subcategory = 'Другие соли';
+    else if (['магний', 'медь', 'цинк', 'кальций', 'натрий', 'сера', 'фосфор', 'йод', 'алюминий', 'железо'].some(el => lowerName.startsWith(el)) && !lowerName.includes('оксид') && !lowerName.includes('хлорид') && !lowerName.includes('сульф') && !lowerName.includes('нитрат') && !lowerName.includes('карбонат') && !lowerName.includes('фосфат') && !lowerName.includes('карбид')) subcategory = 'Простые вещества';
+    else subcategory = 'Разное';
+  }
+
   return {
     id: `mand_${index}`,
     name: cleanName,
     category,
+    subcategory,
     defaultState,
     defaultUnit
   };

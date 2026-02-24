@@ -23,6 +23,18 @@ export function Inventory() {
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const inorganicReagents = MANDATORY_REAGENTS.filter(r => r.category === 'inorganic').sort((a, b) => a.name.localeCompare(b.name));
+  const organicReagents = MANDATORY_REAGENTS.filter(r => r.category === 'organic').sort((a, b) => a.name.localeCompare(b.name));
+
+  const inorganicBySubcategory = inorganicReagents.reduce((acc, r) => {
+    const sub = r.subcategory || 'Разное';
+    if (!acc[sub]) acc[sub] = [];
+    acc[sub].push(r);
+    return acc;
+  }, {} as Record<string, typeof inorganicReagents>);
+
+  const subcategories = Object.keys(inorganicBySubcategory).sort();
+
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -208,16 +220,18 @@ export function Inventory() {
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   >
                     <option value="" disabled>Выберите реактив...</option>
-                    <optgroup label="Неорганические">
-                      {MANDATORY_REAGENTS.filter(r => r.category === 'inorganic').map(r => (
-                        <option key={r.id} value={r.id}>{r.name}</option>
-                      ))}
-                    </optgroup>
                     <optgroup label="Органические">
-                      {MANDATORY_REAGENTS.filter(r => r.category === 'organic').map(r => (
+                      {organicReagents.map(r => (
                         <option key={r.id} value={r.id}>{r.name}</option>
                       ))}
                     </optgroup>
+                    {subcategories.map(sub => (
+                      <optgroup key={sub} label={`Неорганические: ${sub}`}>
+                        {inorganicBySubcategory[sub].map(r => (
+                          <option key={r.id} value={r.id}>{r.name}</option>
+                        ))}
+                      </optgroup>
+                    ))}
                   </select>
                 </div>
               ) : (
